@@ -1,0 +1,76 @@
+name: Deploy para GitHub Pages
+# Quando o workflow será executado
+on:
+  push:
+    branches: ["main"] # Executa quando houver push na branch main
+
+  workflow_dispatch: # Permite executar o workflow manualmente pela aba "Actions" do GitHub
+  
+# Permissões necessárias para publicação ( Define as permissões que o workflow terá dentro do repositório)
+permissions:
+  contents: read  # Permite que o workflow leia o conteúdo do repositório
+  pages: write  # Permite que o workflow escreva/publice conteúdo no GitHub Pages
+  id-token: write # Permite autenticação segura usando OpenID Connect (OIDC)
+  # É necessária para o processo de publicação no GitHub Pages
+
+# Controla execuções simultâneas do workflow
+concurrency:
+  group: "pages" # Cria um grupo chamado "pages" para controlar os deploys
+  cancel-in-progress: false # Se um novo workflow for iniciado, NÃO cancela o deploy que já está em andamento
+
+jobs: # Define os trabalhos (jobs) que serão executados
+  deploy:  # Nome do job
+  # Neste caso, o job responsável pelo processo de deploy
+    runs-on: ubuntu-latest    # Define o sistema operacional utilizado pela máquina virtual
+    # O GitHub cria temporariamente uma máquina Ubuntu para executar o workflow
+
+    steps: # Lista de etapas (steps) que serão executadas
+    # As etapas são executadas na ordem em que aparecem
+
+    
+      # ETAPA 1 - BAIXAR O CÓDIGO DO REPOSITÓRIO     
+
+      # Nome que aparecerá no log da execução
+      - name: Clonar repositório
+        uses: actions/checkout@v6
+       
+      # ETAPA 2 - CONFIGURAR O GITHUB PAGES    
+
+      # Nome da etapa
+      - name: Configurar GitHub Pages   
+      # Utiliza a Action oficial configure-pages
+    # Ela prepara o ambiente necessário para publicação no Pages
+        uses: actions/configure-pages@v5
+
+      # ETAPA 3 - EMPACOTAR OS ARQUIVOS DO SITE   
+
+      # Nome da etapa
+      - name: Fazer upload dos arquivos
+      # Utiliza a Action responsável por criar
+      # o artefato que será utilizado pelo GitHub Pages
+        uses: actions/upload-pages-artifact@v4
+
+        with: # Parâmetros da Action
+         # Define qual pasta será publicada
+          # "." significa:
+          # "a pasta atual, ou seja, a raiz do repositório"
+          #
+          # Portanto, serão considerados arquivos como:
+          # index.html
+          # style.css
+          # script.js
+          # imagens etc.
+          path: "."
+
+       
+      # ETAPA 4 - PUBLICAR O SITE
+      
+
+      # Nome da etapa
+      - name: Publicar no GitHub Pages
+       # Cria um identificador para esta etapa
+        # Esse ID pode ser utilizado por outras partes do workflow
+        id: deployment
+        uses: actions/deploy-pages@v4 
+        # Utiliza a Action oficial responsável pelo deploy
+        # do artefato no GitHub Pages
